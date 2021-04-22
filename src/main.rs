@@ -4,10 +4,12 @@ use structopt::StructOpt;
 pub mod commands;
 pub mod common;
 use commands::new::{execute, NewCommmand};
+use commands::init::{execute, InitCommand};
 
 #[derive(Debug, PartialEq, StructOpt)]
 enum Rpilot {
     New(NewCommmand),
+    Init(InitCommand)
 }
 
 fn main() -> Result<(), ExitFailure> {

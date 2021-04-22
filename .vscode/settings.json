@@ -1,0 +1,4 @@
+{
+    "rust.show_warnings": true,
+    "rust-client.updateOnStartup": false,
+}

@@ -11,7 +11,13 @@ structopt = { version = "0.3" }
 exitfailure = "0.5.1"
 directories = "3.0"
 uuid = { version = "0.8", features = ["v4"] }
+data-encoding = { version = "2.3.2" }
+ring = { version = "0.16.20" }
+savefile = { version = "0.7.4" }
+savefile-derive = { version = "0.7.4" }
+base64 = { version = "0.13.0" }
 
 [dev-dependencies]
 regex = "1"
 tempfile="3.2.0"
+tempdir="0.3.7"
