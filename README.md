@@ -15,7 +15,9 @@ You also need administrative permissions for `apply` and `edit` commands.
 
 ## Installation
 
-More details to come.
+### Download from releases page
+
+Download the rpilot binary from [the GitHub Releases tab](https://github.com/mkinoshi/rpilot/releases).
 
 ## Usage Examples
 
