@@ -15,7 +15,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           WITH_V: true
           INITIAL_VERSION: 0.1.0
-          RELEASE_BRANCHES: *
+          RELEASE_BRANCHES: ".*"
           DEFAULT_BUMP: patch
   release:
     name: Build and Release
