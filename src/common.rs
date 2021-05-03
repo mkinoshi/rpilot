@@ -1,5 +1,6 @@
 use std::fs;
 use std::io::{Error, ErrorKind};
+use std::result::Result;
 
 use directories::ProjectDirs;
 use log::debug;
@@ -23,13 +24,17 @@ pub struct Project {
     pub current_profile: Box<Option<String>>,
 }
 
-pub fn get_data_dir() -> std::io::Result<PathBuf> {
+/// # Errors
+///
+/// Will return `Err` if it fails to retrieve project dir path
+pub fn get_data_dir() -> Result<PathBuf, Error> {
     match ProjectDirs::from("org", "rpilot", "rp") {
         Some(proj_dirs) => Ok(PathBuf::from(proj_dirs.data_dir())),
-        _ => panic!("Failed at get_data_dir()"),
+        None => Err(Error::new(ErrorKind::Other, "Failed at get_data_dir()")),
     }
 }
 
+#[must_use]
 pub fn get_project_id(current_dir: &Path) -> Option<String> {
     debug!("Reading .rpilot in the current directory");
     let config = current_dir.join(ID_FILENAME);
@@ -39,11 +44,19 @@ pub fn get_project_id(current_dir: &Path) -> Option<String> {
     }
 }
 
-pub fn read_config(project_dir: &Path, id: &str) -> (PathBuf, Project) {
+/// # Errors
+///
+/// Will return `Err` if it fails to retrieve the path of the config file or it it fails to load the config file
+pub fn read_config(project_dir: &Path, id: &str) -> Result<(PathBuf, Project), Error> {
     debug!("Reading the config file for this project");
     let data_dir = project_dir.join(id.to_string());
     let config_path = data_dir.join(CONFIG_FILENAME);
-    let config_path_name = config_path.to_str().unwrap();
+    let config_path_name = config_path.to_str().unwrap_or("");
+
+    if config_path_name.is_empty() {
+        return Err(Error::new(ErrorKind::Other, "config path is empty"));
+    }
+
     let content = match load_file(&config_path_name, 0) {
         Ok(v) => v,
         Err(_) => Project {
@@ -52,9 +65,10 @@ pub fn read_config(project_dir: &Path, id: &str) -> (PathBuf, Project) {
         },
     };
 
-    (config_path, content)
+    Ok((config_path, content))
 }
 
+#[must_use]
 pub fn read_env(
     project_dir: &Path,
     project_id: &str,
@@ -69,12 +83,23 @@ pub fn read_env(
     (env_path, env)
 }
 
-pub fn save_config(project: Project, config_path: &mut PathBuf) -> Result<(), Error> {
-    let config_path = config_path.to_str().unwrap();
-    save_file(config_path, 0, &project)
+/// # Errors
+///
+/// Will return `Err` if it fails to retrieve the path of the config file or if it fails to save the config file
+pub fn save_config(project: &Project, config_path: &mut PathBuf) -> Result<(), Error> {
+    let config_path = config_path.to_str().unwrap_or("");
+
+    if config_path.is_empty() {
+        return Err(Error::new(ErrorKind::Other, "Empty config path"));
+    }
+
+    save_file(config_path, 0, project)
         .map_err(|_| Error::new(ErrorKind::Other, "Failed at saving config"))
 }
 
+/// # Errors
+///
+/// Will return `Err` if it fails to find the appropriate entry in the project
 pub fn select_profile<'a>(project: &'a Project, name: &str) -> Result<&'a Entry, Error> {
     match project.entries.iter().position(|entry| entry.name == name) {
         Some(ind) => Ok(&project.entries[ind]),
@@ -127,7 +152,7 @@ mod test {
             entries: vec![entry],
             current_profile: Box::new(Some("test".to_string())),
         };
-        assert_eq!(save_config(project, &mut config).is_ok(), true);
+        assert_eq!(save_config(&project, &mut config).is_ok(), true);
     }
 
     #[test]
@@ -145,9 +170,9 @@ mod test {
             entries: vec![entry],
             current_profile: Box::new(None),
         };
-        assert_eq!(save_config(project, &mut config).is_ok(), true);
+        assert_eq!(save_config(&project, &mut config).is_ok(), true);
 
-        let (read_config, project) = read_config(&tmp_dir_path, "");
+        let (read_config, project) = read_config(&tmp_dir_path, "").unwrap();
         assert_eq!(project.entries.len(), 1);
         assert_eq!(project.entries[0].name, "test");
         assert_eq!(read_config.to_str(), config.to_str());

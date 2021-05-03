@@ -40,7 +40,7 @@ fn _execute() -> Result<(), InitCommandError> {
     if let Some(p) = pwd.to_str() {
         debug!("{}", format!("Creating .rpilot at {}", &p));
     }
-    write_id(id, pwd)?;
+    write_id(id, &pwd)?;
     write_config_file(&path)?;
     Ok(())
 }
@@ -53,7 +53,7 @@ fn create_env_dir() -> Result<(PathBuf, String), InitCommandError> {
     Ok((path, id.to_string()))
 }
 
-fn write_id(id: String, current_dir: PathBuf) -> SimpleResult<()> {
+fn write_id(id: String, current_dir: &Path) -> SimpleResult<()> {
     let config = current_dir.join(common::ID_FILENAME);
     fs::write(config, id)
 }
@@ -83,7 +83,7 @@ mod test {
     fn test_write_id() {
         let tmp_dir = TempDir::new("test_write_id").unwrap();
         let tmp_dir_path = tmp_dir.path().to_owned();
-        assert_eq!(write_id("1234".to_string(), tmp_dir_path).is_ok(), true);
+        assert_eq!(write_id("1234".to_string(), &tmp_dir_path).is_ok(), true);
     }
 
     #[test]

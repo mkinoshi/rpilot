@@ -3,25 +3,25 @@ use structopt::StructOpt;
 
 pub mod commands;
 pub mod common;
-use commands::apply::{execute as apply, ApplyCommand};
-use commands::current::execute as current;
-use commands::edit::{execute as edit, EditCommand};
-use commands::init::execute as init;
-use commands::list::execute as list;
-use commands::new::{execute as new, NewCommand};
-use commands::remove::{execute as remove, RemoveCommand};
-use commands::show::{execute as show, ShowCommand};
+use commands::apply;
+use commands::current;
+use commands::edit;
+use commands::init;
+use commands::list;
+use commands::new;
+use commands::remove;
+use commands::show;
 
 #[derive(Debug, PartialEq, StructOpt)]
 enum Rpilot {
-    New(NewCommand),
+    New(new::Args),
     Init,
     List,
     Current,
-    Remove(RemoveCommand),
-    Show(ShowCommand),
-    Edit(EditCommand),
-    Apply(ApplyCommand),
+    Remove(remove::Args),
+    Show(show::Args),
+    Edit(edit::Args),
+    Apply(apply::Args),
 }
 
 fn main() {
@@ -29,13 +29,13 @@ fn main() {
     env_logger::init_from_env(env);
 
     match Rpilot::from_args() {
-        Rpilot::New(v) => new(&v),
-        Rpilot::Init => init(),
-        Rpilot::List => list(),
-        Rpilot::Current => current(),
-        Rpilot::Remove(v) => remove(&v),
-        Rpilot::Show(v) => show(&v),
-        Rpilot::Edit(v) => edit(&v),
-        Rpilot::Apply(v) => apply(&v),
+        Rpilot::New(v) => new::execute(&v),
+        Rpilot::Init => init::execute(),
+        Rpilot::List => list::execute(),
+        Rpilot::Current => current::execute(),
+        Rpilot::Remove(v) => remove::execute(&v),
+        Rpilot::Show(v) => show::execute(&v),
+        Rpilot::Edit(v) => edit::execute(&v),
+        Rpilot::Apply(v) => apply::execute(&v),
     };
 }

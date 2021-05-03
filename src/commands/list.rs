@@ -10,6 +10,9 @@ enum ListCommandError {
     #[error("reading .rpilot file failed. Make sure this project is initialised properly")]
     NotInitialized,
 
+    #[error("Failed at reading the config")]
+    ConfigReadError,
+
     #[error("external library failed")]
     ExternalFail(#[from] std::io::Error),
 }
@@ -32,7 +35,8 @@ fn _execute() -> Result<(), ListCommandError> {
 
     let project_id = project_id.unwrap();
 
-    let (_, project) = common::read_config(&project_dir, &project_id);
+    let (_, project) = common::read_config(&project_dir, &project_id)
+        .map_err(|_| ListCommandError::ConfigReadError)?;
 
     print_entries(&project.entries);
     Ok(())
