@@ -1,6 +1,6 @@
 [package]
 name = "rpilot"
-version = "0.1.0"
+version = "0.3.1"
 authors = ["Makoto Kinoshita <mkinoshi12@gmail.com>"]
 license = "MIT"
 edition = "2018"
