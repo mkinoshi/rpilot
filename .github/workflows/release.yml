@@ -1,6 +1,5 @@
-name: Create a new tag
-on:
-  workflow_dispatch:
+name: Release
+on: push
 
 jobs:
   bump_version:
@@ -16,7 +15,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           WITH_V: true
           INITIAL_VERSION: 0.1.0
-          RELEASE_BRANCHES: main
+          RELEASE_BRANCHES: *
+          DEFAULT_BUMP: patch
   release:
     name: Build and Release
     needs: bump_version
