@@ -152,7 +152,7 @@ mod test {
             entries: vec![entry],
             current_profile: Box::new(Some("test".to_string())),
         };
-        assert_eq!(save_config(project, &mut config).is_ok(), true);
+        assert_eq!(save_config(&project, &mut config).is_ok(), true);
     }
 
     #[test]
@@ -170,9 +170,9 @@ mod test {
             entries: vec![entry],
             current_profile: Box::new(None),
         };
-        assert_eq!(save_config(project, &mut config).is_ok(), true);
+        assert_eq!(save_config(&project, &mut config).is_ok(), true);
 
-        let (read_config, project) = read_config(&tmp_dir_path, "");
+        let (read_config, project) = read_config(&tmp_dir_path, "").unwrap();
         assert_eq!(project.entries.len(), 1);
         assert_eq!(project.entries[0].name, "test");
         assert_eq!(read_config.to_str(), config.to_str());

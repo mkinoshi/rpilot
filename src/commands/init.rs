@@ -83,7 +83,7 @@ mod test {
     fn test_write_id() {
         let tmp_dir = TempDir::new("test_write_id").unwrap();
         let tmp_dir_path = tmp_dir.path().to_owned();
-        assert_eq!(write_id("1234".to_string(), tmp_dir_path).is_ok(), true);
+        assert_eq!(write_id("1234".to_string(), &tmp_dir_path).is_ok(), true);
     }
 
     #[test]
