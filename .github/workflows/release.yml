@@ -17,6 +17,8 @@ jobs:
           WITH_V: true
           INITIAL_VERSION: 0.1.0
           RELEASE_BRANCHES: main
+          DEFAULT_BUMP: patch
+
   release:
     name: Build and Release
     needs: bump_version
