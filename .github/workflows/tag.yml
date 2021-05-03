@@ -1,10 +1,10 @@
-name: Bump version, create new tag and release point
+name: Create a new tag
 on:
   workflow_dispatch:
 
 jobs:
   bump_version:
-    name: Bump version, create tag/release point
+    name: Bump version and create a new tag
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
