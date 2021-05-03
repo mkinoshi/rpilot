@@ -40,7 +40,7 @@ fn _execute() -> Result<(), InitCommandError> {
     if let Some(p) = pwd.to_str() {
         debug!("{}", format!("Creating .rpilot at {}", &p));
     }
-    write_id(id, pwd)?;
+    write_id(id, &pwd)?;
     write_config_file(&path)?;
     Ok(())
 }
@@ -53,7 +53,7 @@ fn create_env_dir() -> Result<(PathBuf, String), InitCommandError> {
     Ok((path, id.to_string()))
 }
 
-fn write_id(id: String, current_dir: PathBuf) -> SimpleResult<()> {
+fn write_id(id: String, current_dir: &Path) -> SimpleResult<()> {
     let config = current_dir.join(common::ID_FILENAME);
     fs::write(config, id)
 }

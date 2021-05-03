@@ -1,16 +1,9 @@
 use log::error;
 use std::env;
 use std::result::Result;
-use structopt::StructOpt;
 use thiserror::Error;
 
 use crate::common;
-
-#[derive(Debug, PartialEq, StructOpt)]
-pub struct CurrentCommand {
-    #[structopt(short, long)]
-    name: String,
-}
 
 #[derive(Error, Debug)]
 enum CurrentCommandError {
@@ -24,6 +17,9 @@ enum CurrentCommandError {
         "no profile has been applied yet. Please use apply command to use the certain profile"
     )]
     NoProfileIsApplied,
+
+    #[error("Failed at reading the config")]
+    ConfigReadError,
 
     #[error("external library failed")]
     ExternalFail(#[from] std::io::Error),
@@ -48,7 +44,8 @@ fn _execute() -> Result<(), CurrentCommandError> {
     }
 
     let project_id = project_id.unwrap();
-    let (_, project) = common::read_config(&project_dir, &project_id);
+    let (_, project) = common::read_config(&project_dir, &project_id)
+        .map_err(|_| CurrentCommandError::ConfigReadError)?;
 
     if project.current_profile.as_ref().is_none() {
         return Err(CurrentCommandError::NoProfileIsApplied);

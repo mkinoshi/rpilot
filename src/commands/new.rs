@@ -12,7 +12,7 @@ use uuid::Uuid;
 use crate::common;
 
 #[derive(Debug, PartialEq, StructOpt)]
-pub struct NewCommand {
+pub struct Args {
     #[structopt(short, long, parse(from_os_str))]
     source: Option<PathBuf>,
 
@@ -34,11 +34,14 @@ enum NewCommandError {
     #[error("Failed at saving a new rpilot entry ")]
     SaveFileError,
 
+    #[error("Failed at reading the config")]
+    ConfigReadError,
+
     #[error("external library failed")]
     ExternalFail(#[from] std::io::Error),
 }
 
-pub fn execute(args: &NewCommand) {
+pub fn execute(args: &Args) {
     match _execute(args) {
         Ok(_) => {
             info!("Successfully created a new rpilot entry");
@@ -49,7 +52,7 @@ pub fn execute(args: &NewCommand) {
     }
 }
 
-fn _execute(args: &NewCommand) -> Result<(), NewCommandError> {
+fn _execute(args: &Args) -> Result<(), NewCommandError> {
     let pwd = env::current_dir()?;
     let project_dir = common::get_data_dir()?;
 
@@ -62,7 +65,8 @@ fn _execute(args: &NewCommand) -> Result<(), NewCommandError> {
     let project_id = project_id.unwrap();
     info!("Retrieved proejct id is {}", project_id);
 
-    let (mut config, mut project) = common::read_config(&project_dir, &project_id);
+    let (mut config, mut project) = common::read_config(&project_dir, &project_id)
+        .map_err(|_| NewCommandError::ConfigReadError)?;
 
     let exists = check_if_profile_exists(&project.entries, &args.name);
     if exists {
@@ -93,7 +97,7 @@ fn _execute(args: &NewCommand) -> Result<(), NewCommandError> {
     };
 
     project.entries.push(entry);
-    common::save_config(project, &mut config).map_err(|_| NewCommandError::SaveFileError)?;
+    common::save_config(&project, &mut config).map_err(|_| NewCommandError::SaveFileError)?;
     Ok(())
 }
 

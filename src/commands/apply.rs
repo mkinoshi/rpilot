@@ -13,7 +13,7 @@ use thiserror::Error;
 use crate::common;
 
 #[derive(Debug, PartialEq, StructOpt)]
-pub struct ApplyCommand {
+pub struct Args {
     #[structopt(short, long)]
     name: String,
 }
@@ -32,11 +32,14 @@ enum ApplyCommandError {
     #[error("Failed at saving the selected profile")]
     SaveFileError,
 
+    #[error("Failed at reading the config")]
+    ConfigReadError,
+
     #[error("external library failed")]
     ExternalFail(#[from] std::io::Error),
 }
 
-pub fn execute(args: &ApplyCommand) {
+pub fn execute(args: &Args) {
     match _execute(args) {
         Ok(_) => info!("successfully updated the current .env file"),
         Err(e) => {
@@ -45,7 +48,7 @@ pub fn execute(args: &ApplyCommand) {
     }
 }
 
-fn _execute(args: &ApplyCommand) -> Result<(), ApplyCommandError> {
+fn _execute(args: &Args) -> Result<(), ApplyCommandError> {
     let pwd = env::current_dir()?;
     let project_dir = common::get_data_dir()?;
     let project_id = common::get_project_id(&pwd);
@@ -55,7 +58,8 @@ fn _execute(args: &ApplyCommand) -> Result<(), ApplyCommandError> {
     }
 
     let project_id = project_id.unwrap();
-    let (mut config_path, mut project) = common::read_config(&project_dir, &project_id);
+    let (mut config_path, mut project) = common::read_config(&project_dir, &project_id)
+        .map_err(|_| ApplyCommandError::ConfigReadError)?;
 
     let profile =
         common::select_profile(&project, &args.name).map_err(|_| ApplyCommandError::NotExists)?;
@@ -68,7 +72,7 @@ fn _execute(args: &ApplyCommand) -> Result<(), ApplyCommandError> {
         set_symlink(&pwd, &env_path)?;
         project.current_profile = Box::new(Some(String::from(&args.name)));
 
-        return common::save_config(project, &mut config_path)
+        return common::save_config(&project, &mut config_path)
             .map_err(|_| ApplyCommandError::SaveFileError);
     }
     Err(ApplyCommandError::Aborted)
@@ -94,11 +98,10 @@ fn should_apply_env() -> Result<bool, ApplyCommandError> {
 
 fn set_symlink(pwd: &Path, env_path: &Path) -> SimpleResult<()> {
     let current_env_path = pwd.join(".env");
-    match fs::remove_file(&current_env_path) {
-        Ok(_) => (),
-        Err(_) => debug!(".env file does not exist in the current directory"),
-    }
 
+    if fs::remove_file(&current_env_path).is_err() {
+        debug!(".env file does not exist in the current directory")
+    }
     unix::fs::symlink(env_path, &current_env_path)?;
     let mut perms = fs::metadata(&current_env_path)?.permissions();
     perms.set_readonly(true);

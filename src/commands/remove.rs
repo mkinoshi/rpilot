@@ -7,7 +7,7 @@ use thiserror::Error;
 use crate::common;
 
 #[derive(Debug, PartialEq, StructOpt)]
-pub struct RemoveCommand {
+pub struct Args {
     #[structopt(short, long)]
     name: String,
 }
@@ -23,11 +23,14 @@ enum RemoveCommandError {
     #[error("failed at updating config")]
     SaveFileError,
 
+    #[error("Failed at reading the config")]
+    ConfigReadError,
+
     #[error("external library failed")]
     ExternalFail(#[from] std::io::Error),
 }
 
-pub fn execute(args: &RemoveCommand) {
+pub fn execute(args: &Args) {
     match _execute(args) {
         Ok(_) => {
             info!("successfully removed a profile");
@@ -38,7 +41,7 @@ pub fn execute(args: &RemoveCommand) {
     }
 }
 
-fn _execute(args: &RemoveCommand) -> Result<(), RemoveCommandError> {
+fn _execute(args: &Args) -> Result<(), RemoveCommandError> {
     let pwd = env::current_dir()?;
     let project_dir = common::get_data_dir()?;
     let project_id = common::get_project_id(&pwd);
@@ -49,11 +52,12 @@ fn _execute(args: &RemoveCommand) -> Result<(), RemoveCommandError> {
 
     let project_id = project_id.unwrap();
 
-    let (mut config_path, mut project) = common::read_config(&project_dir, &project_id);
+    let (mut config_path, mut project) = common::read_config(&project_dir, &project_id)
+        .map_err(|_| RemoveCommandError::ConfigReadError)?;
 
     remove_profile(&mut project, &args.name)?;
 
-    common::save_config(project, &mut config_path)
+    common::save_config(&project, &mut config_path)
         .map_err(|_| RemoveCommandError::SaveFileError)?;
 
     Ok(())
