@@ -1,0 +1,67 @@
+name: Release
+on:
+  workflow_dispatch:
+
+jobs:
+  bump_version:
+    name: Bump version and create a new tag
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Bump version and push tag/create release point
+        id: bump_version
+        uses: anothrNick/github-tag-action@1.17.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WITH_V: true
+          RELEASE_BRANCHES: ".*"
+          DEFAULT_BUMP: patch
+      - name: Get the latest version
+        uses: actions-ecosystem/action-get-latest-tag@v1
+        id: get-latest-tag
+        with:
+          semver_only: true
+      - name: Write the latest version to file
+        run: |
+          echo "${{ steps.get-latest-tag.outputs.tag }}" > version.txt
+      - name: Upload env info the release job
+        uses: actions/upload-artifact@v2
+        with:
+          name: version
+          path: version.txt
+
+  release:
+    name: Build and Release
+    needs: bump_version
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: rpilot
+            asset_name: rpilot-linux
+          - os: macos-latest
+            artifact_name: rpilot
+            asset_name: rpilot-macos
+    steps:
+      - name: Download version info
+        uses: actions/download-artifact@v2
+        with:
+          name: version
+      - name: Read the latest version
+        id: read_tag
+        run: |
+          TAG_VERSION=`cat version.txt`
+          echo "::set-output name=tag::$TAG_VERSION"
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Build project
+        run: cargo build --release --locked
+      - name: Upload binary to release
+        uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: target/release/${{ matrix.artifact_name }}
+          asset_name: ${{ matrix.asset_name }}-${{ steps.read_tag.outputs.tag }}
+          tag: ${{ steps.read_tag.outputs.tag }}
