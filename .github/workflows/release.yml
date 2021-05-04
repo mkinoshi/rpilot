@@ -26,6 +26,12 @@ jobs:
         run: |
           echo "${{ steps.get-latest-tag.outputs.tag }}"
           echo "${{ steps.get-latest-tag.outputs.tag }}" > version.txt
+      - name: Upload env info the release job
+        uses: actions/upload-artifact@v2
+        with:
+          name: version
+          path: version.txt
+
   release:
     name: Build and Release
     needs: bump_version
@@ -40,13 +46,17 @@ jobs:
             artifact_name: rpilot
             asset_name: rpilot-macos-amd64
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - name: Download version info
+        uses: actions/download-artifact@v2
+        with:
+          name: version
       - name: Read the latest version
         run: |
           value=`cat version.txt`
           echo "$value"
           echo "$value" > $TAG_VERSION
+      - name: Checkout code
+        uses: actions/checkout@v2
       - name: Build project
         run: cargo build --release --locked
       - name: Upload binary to release
