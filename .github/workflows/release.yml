@@ -52,9 +52,8 @@ jobs:
           name: version
       - name: Read the latest version
         run: |
-          value=`cat version.txt`
-          echo "$value"
-          echo "$value" > $TAG_VERSION
+          TAG_VERSION=`cat version.txt`
+          echo "$TAG_VERSION"
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Build project
@@ -64,5 +63,5 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: target/release/${{ matrix.artifact_name }}
-          asset_name: ${{ matrix.asset_name }}
+          asset_name: ${{ matrix.asset_name }}-${{ env.TAG_VERSION }}
           tag: ${{ env.TAG_VERSION }}
