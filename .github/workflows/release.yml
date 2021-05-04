@@ -1,5 +1,6 @@
 name: Release
-on: push
+on:
+  workflow_dispatch:
 
 jobs:
   bump_version:
@@ -14,7 +15,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           WITH_V: true
-          INITIAL_VERSION: 0.1.0
           RELEASE_BRANCHES: ".*"
           DEFAULT_BUMP: patch
       - name: Get the latest version
@@ -24,7 +24,6 @@ jobs:
           semver_only: true
       - name: Write the latest version to file
         run: |
-          echo "${{ steps.get-latest-tag.outputs.tag }}"
           echo "${{ steps.get-latest-tag.outputs.tag }}" > version.txt
       - name: Upload env info the release job
         uses: actions/upload-artifact@v2
@@ -53,7 +52,6 @@ jobs:
       - name: Read the latest version
         run: |
           TAG_VERSION=`cat version.txt`
-          echo "$TAG_VERSION"
           echo "::set-output name=tag::$TAG_VERSION"
         id: read_tag
       - name: Checkout code
