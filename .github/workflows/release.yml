@@ -17,6 +17,15 @@ jobs:
           INITIAL_VERSION: 0.1.0
           RELEASE_BRANCHES: ".*"
           DEFAULT_BUMP: patch
+      - name: Get the latest version
+        uses: actions-ecosystem/action-get-latest-tag@v1
+        id: get-latest-tag
+        with:
+          semver_only: true
+      - name: Write the latest version to file
+        run: |
+          echo "${{ steps.get-latest-tag.outputs.tag }}"
+          echo "${{ steps.get-latest-tag.outputs.tag }}" > version.txt
   release:
     name: Build and Release
     needs: bump_version
@@ -33,11 +42,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Get the latest version
-        uses: actions-ecosystem/action-get-latest-tag@v1
-        id: get-latest-tag
-        with:
-          semver_only: true
+      - name: Read the latest version
+        run: |
+          value=`cat version.txt`
+          echo "$value"
+          echo "$value" > $TAG_VERSION
       - name: Build project
         run: cargo build --release --locked
       - name: Upload binary to release
@@ -46,4 +55,4 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: target/release/${{ matrix.artifact_name }}
           asset_name: ${{ matrix.asset_name }}
-          tag: ${{ steps.get-latest-tag.outputs.tag }}
+          tag: ${{ env.TAG_VERSION }}
