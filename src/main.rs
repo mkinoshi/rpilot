@@ -3,18 +3,18 @@ use structopt::StructOpt;
 
 pub mod commands;
 pub mod common;
+use commands::add;
 use commands::apply;
 use commands::current;
 use commands::edit;
 use commands::init;
 use commands::list;
-use commands::new;
 use commands::remove;
 use commands::show;
 
 #[derive(Debug, PartialEq, StructOpt)]
 enum Rpilot {
-    New(new::Args),
+    Add(add::Args),
     Init,
     List,
     Current,
@@ -29,7 +29,7 @@ fn main() {
     env_logger::init_from_env(env);
 
     match Rpilot::from_args() {
-        Rpilot::New(v) => new::execute(&v),
+        Rpilot::Add(v) => add::execute(&v),
         Rpilot::Init => init::execute(),
         Rpilot::List => list::execute(),
         Rpilot::Current => current::execute(),

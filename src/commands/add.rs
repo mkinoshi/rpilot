@@ -21,7 +21,7 @@ pub struct Args {
 }
 
 #[derive(Error, Debug)]
-enum NewCommandError {
+enum AddCommandError {
     #[error("reading .rpilot file failed. Make sure this project is initialised properly")]
     NotInitialized,
 
@@ -52,25 +52,25 @@ pub fn execute(args: &Args) {
     }
 }
 
-fn _execute(args: &Args) -> Result<(), NewCommandError> {
+fn _execute(args: &Args) -> Result<(), AddCommandError> {
     let pwd = env::current_dir()?;
     let project_dir = common::get_data_dir()?;
 
     let project_id = common::get_project_id(&pwd);
 
     if project_id.is_none() {
-        return Err(NewCommandError::NotInitialized);
+        return Err(AddCommandError::NotInitialized);
     }
 
     let project_id = project_id.unwrap();
     info!("Retrieved proejct id is {}", project_id);
 
     let (mut config, mut project) = common::read_config(&project_dir, &project_id)
-        .map_err(|_| NewCommandError::ConfigReadError)?;
+        .map_err(|_| AddCommandError::ConfigReadError)?;
 
     let exists = check_if_profile_exists(&project.entries, &args.name);
     if exists {
-        return Err(NewCommandError::AlreadyExists);
+        return Err(AddCommandError::AlreadyExists);
     }
 
     let (env_path, env_id) = get_env_internal_path(&project_dir, &project_id);
@@ -97,7 +97,7 @@ fn _execute(args: &Args) -> Result<(), NewCommandError> {
     };
 
     project.entries.push(entry);
-    common::save_config(&project, &mut config).map_err(|_| NewCommandError::SaveFileError)?;
+    common::save_config(&project, &mut config).map_err(|_| AddCommandError::SaveFileError)?;
     Ok(())
 }
 
@@ -107,7 +107,7 @@ fn check_if_profile_exists(entries: &[common::Entry], name: &str) -> bool {
 }
 
 fn get_env_internal_path(project_dir: &Path, id: &str) -> (PathBuf, String) {
-    debug!("Retrieving the new path to copy this env file");
+    debug!("Retrieving the new path to copy this env file to");
 
     let env_id = Uuid::new_v4().to_string();
     let data_dir = project_dir.join(id.to_string());
@@ -119,19 +119,19 @@ fn copy_env(source: &Path, env_path: &Path) -> SimpleResult<u64> {
     fs::copy(source, env_path)
 }
 
-fn generate_new_env_file(env_path: &Path) -> Result<(), NewCommandError> {
+fn generate_new_env_file(env_path: &Path) -> Result<(), AddCommandError> {
     let template = "# Please add new env values";
     let edited = edit::edit(template)?;
 
     debug!("Edited values: {}", edited);
     if edited == template {
-        return Err(NewCommandError::NoValidEnv);
+        return Err(AddCommandError::NoValidEnv);
     }
     fs::write(env_path, edited)?;
     Ok(())
 }
 
-fn generate_file_hash(path: &Path) -> Result<String, NewCommandError> {
+fn generate_file_hash(path: &Path) -> Result<String, AddCommandError> {
     let input = fs::File::open(path)?;
     let mut reader = BufReader::new(input);
 
