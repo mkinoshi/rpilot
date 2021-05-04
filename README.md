@@ -30,7 +30,7 @@ rpilot init
 - Add a new env profile
 
 ```
-rpilot new --name default
+rpilot add --name default
 ```
 
 - Apply the specific profile
